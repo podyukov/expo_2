@@ -4,7 +4,6 @@ import { db, initDB } from '../database/schema';
 
 type MarkerContextType = {
   markers: MarkerData[];
-  isLoading: boolean;
   error: string | null;
   addMarker: (marker: Omit<MarkerData, 'images'>) => Promise<void>;
   addImageToMarker: (markerId: string, image: ImageData) => Promise<void>;
@@ -15,7 +14,6 @@ type MarkerContextType = {
 
 const MarkerContext = createContext<MarkerContextType>({
   markers: [],
-  isLoading: false,
   error: null,
   addMarker: async () => {},
   addImageToMarker: async () => {},
@@ -26,11 +24,9 @@ const MarkerContext = createContext<MarkerContextType>({
 
 export const MarkerProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const [markers, setMarkers] = useState<MarkerData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadMarkers = async () => {
-    setIsLoading(true);
     try {
       const markersResult = await db.getAllAsync<MarkerData>('SELECT * FROM markers;');
       
@@ -55,7 +51,6 @@ export const MarkerProvider: React.FC<{children: React.ReactNode}> = ({ children
       setError(err instanceof Error ? err.message : 'Unknown error');
       console.error('Failed to load markers:', err);
     } finally {
-      setIsLoading(false);
     }
   };
 
@@ -128,7 +123,6 @@ export const MarkerProvider: React.FC<{children: React.ReactNode}> = ({ children
   return (
     <MarkerContext.Provider value={{ 
       markers, 
-      isLoading,
       error,
       addMarker, 
       addImageToMarker, 
