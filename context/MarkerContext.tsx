@@ -1,38 +1,20 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { ImageData, MarkerData } from '../types';
+import { Alert } from "react-native";
 import { db, initDB } from '../database/schema';
 
-type MarkerContextType = {
-  markers: MarkerData[];
-  error: string | null;
-  addMarker: (marker: Omit<MarkerData, 'images'>) => Promise<void>;
-  addImageToMarker: (markerId: string, image: ImageData) => Promise<void>;
-  removeImageFromMarker: (markerId: string, imageId: string) => Promise<void>;
-  removeMarker: (markerId: string) => Promise<void>;
-  loadMarkers: () => Promise<void>;
-};
+const MarkerContext = createContext({});
 
-const MarkerContext = createContext<MarkerContextType>({
-  markers: [],
-  error: null,
-  addMarker: async () => {},
-  addImageToMarker: async () => {},
-  removeImageFromMarker: async () => {},
-  removeMarker: async () => {},
-  loadMarkers: async () => {},
-});
-
-export const MarkerProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
-  const [markers, setMarkers] = useState<MarkerData[]>([]);
-  const [error, setError] = useState<string | null>(null);
+export const MarkerProvider = ({ children }) => {
+  const [markers, setMarkers] = useState([]);
+  const [error, setError] = useState(null);
 
   const loadMarkers = async () => {
     try {
-      const markersResult = await db.getAllAsync<MarkerData>('SELECT * FROM markers;');
+      const markersResult = await db.getAllAsync('SELECT * FROM markers;');
       
       if (markersResult.length > 0) {
         const placeholders = markersResult.map(() => '?').join(',');
-        const images = await db.getAllAsync<ImageData>(
+        const images = await db.getAllAsync(
           `SELECT * FROM marker_images WHERE marker_id IN (${placeholders});`,
           markersResult.map(m => m.id)
         );
@@ -47,37 +29,30 @@ export const MarkerProvider: React.FC<{children: React.ReactNode}> = ({ children
         setMarkers([]);
       }
       setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      console.error('Failed to load markers:', err);
-    } finally {
     }
+    catch (err) { Alert.alert("Ошибка", "Не удалось загрузить маркеры!"); }
   };
 
-  const addMarker = async (marker: Omit<MarkerData, 'images'>) => {
+  const addMarker = async (marker: Omit<'images'>) => {
     try {
       await db.runAsync(
         'INSERT INTO markers (id, latitude, longitude) VALUES (?, ?, ?);',
         [marker.id, marker.latitude, marker.longitude]
       );
       await loadMarkers();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      console.error('Failed to add marker:', err);
     }
+    catch (err) { Alert.alert("Ошибка", "Не удалось добавить маркеры!"); }
   };
 
-  const addImageToMarker = async (markerId: string, image: ImageData) => {
+  const addImageToMarker = async (markerId: string, image) => {
     try {
       await db.runAsync(
         'INSERT INTO marker_images (id, marker_id, uri) VALUES (?, ?, ?);',
         [image.id, markerId, image.uri]
       );
       await loadMarkers();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      console.error('Failed to add image:', err);
     }
+    catch (err) { Alert.alert("Ошибка", "Не удалось добавить изображение!"); }
   };
 
   const removeImageFromMarker = async (markerId: string, imageId: string) => {
@@ -87,10 +62,8 @@ export const MarkerProvider: React.FC<{children: React.ReactNode}> = ({ children
         [imageId]
       );
       await loadMarkers();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      console.error('Failed to remove image:', err);
     }
+    catch (err) { Alert.alert("Ошибка", "Не удалось удалить изображение!"); }
   };
 
   const removeMarker = async (markerId: string) => {
@@ -100,10 +73,8 @@ export const MarkerProvider: React.FC<{children: React.ReactNode}> = ({ children
         [markerId]
       );
       await loadMarkers();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      console.error('Failed to remove marker:', err);
     }
+    catch (err) { Alert.alert("Ошибка", "Не удалось удалить маркер!"); }
   };
 
   useEffect(() => {
@@ -111,12 +82,10 @@ export const MarkerProvider: React.FC<{children: React.ReactNode}> = ({ children
       try {
         await initDB();
         await loadMarkers();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        console.error('Database initialization failed:', err);
       }
+      catch (err) { Alert.alert("Ошибка", "Не удалось иницилизировать базу данных!"); }
     };
-
+    
     initialize();
   }, []);
 
