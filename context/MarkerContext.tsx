@@ -6,7 +6,6 @@ const MarkerContext = createContext({});
 
 export const MarkerProvider = ({ children }) => {
   const [markers, setMarkers] = useState([]);
-  const [error, setError] = useState(null);
 
   const loadMarkers = async () => {
     try {
@@ -28,7 +27,6 @@ export const MarkerProvider = ({ children }) => {
       } else {
         setMarkers([]);
       }
-      setError(null);
     }
     catch (err) { Alert.alert("Ошибка", "Не удалось загрузить маркеры!"); }
   };
@@ -85,16 +83,15 @@ export const MarkerProvider = ({ children }) => {
       }
       catch (err) { Alert.alert("Ошибка", "Не удалось иницилизировать базу данных!"); }
     };
-    
+
     initialize();
   }, []);
 
   return (
     <MarkerContext.Provider value={{ 
-      markers, 
-      error,
-      addMarker, 
-      addImageToMarker, 
+      markers,
+      addMarker,
+      addImageToMarker,
       removeImageFromMarker,
       removeMarker,
       loadMarkers
