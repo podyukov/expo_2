@@ -62,3 +62,6 @@ CREATE TABLE IF NOT EXISTS marker_images (
 
 - Таблица `marker_images` связана с таблицей `markers` через поле `marker_id`
 - Установлено ограничение `ON DELETE CASCADE`, что означает автоматическое удаление всех изображений маркера при удалении самого маркера
+
+##### Демонстрация работы программы
+https://github.com/user-attachments/assets/6c7075f1-358b-4ace-a000-2cce068af097
